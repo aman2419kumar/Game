@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Chess - Advanced ELO System with Stockfish 17.1</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/stockfish@17.1.0/dist/stockfish.js"></script>
+</head>
+<body>
+    <div class="app">
+        <!-- Loading Screen -->
+        <div id="loadingScreen" class="loading-screen">
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <h2>Loading Premium Chess</h2>
+                <p>Initializing Stockfish 17.1 Analysis Engine...</p>
+                <div class="loading-progress">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Menu -->
+        <div id="mainMenu" class="main-menu">
+            <div class="menu-container">
+                <div class="menu-header">
+                    <h1 class="app-title">
+                        <span class="title-main">Premium Chess</span>
+                        <span class="title-subtitle">with Stockfish 17.1 & Advanced ELO System</span>
+                    </h1>
+                </div>
+                
+                <div class="game-mode-selection">
+                    <h2>Choose Game Mode</h2>
+                    <div class="game-modes">
+                        <div class="game-mode-card" data-mode="human">
+                            <div class="mode-icon">👥</div>
+                            <h3>Human vs Human</h3>
+                            <p>Play against a friend locally</p>
+                            <button class="btn btn--primary">Play Now</button>
+                        </div>
+                        
+                        <div class="game-mode-card" data-mode="computer">
+                            <div class="mode-icon">🤖</div>
+                            <h3>Human vs Computer</h3>
+                            <p>Challenge the advanced AI opponent</p>
+                            <div class="difficulty-selector">
+                                <label class="form-label">ELO Difficulty Level</label>
+                                <div class="elo-slider-container">
+                                    <input type="range" id="eloSlider" class="elo-slider" min="800" max="2800" step="200" value="1500">
+                                    <div class="elo-display">
+                                        <span id="eloValue">1500</span> ELO
+                                        <span id="eloLevel">Advanced</span>
+                                    </div>
+                                </div>
+                                <div class="elo-marks">
+                                    <span>800</span>
+                                    <span>1000</span>
+                                    <span>1200</span>
+                                    <span>1500</span>
+                                    <span>1800</span>
+                                    <span>2100</span>
+                                    <span>2400</span>
+                                    <span>2800</span>
+                                </div>
+                                <div class="elo-description" id="eloDescription">
+                                    Strong tactical play with tournament-level calculations
+                                </div>
+                            </div>
+                            <button class="btn btn--primary">Play Now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="game-screen hidden">
+            <!-- Header -->
+            <header class="game-header">
+                <div class="container">
+                    <div class="header-left">
+                        <h1 class="game-title">Premium Chess</h1>
+                        <div class="game-info">
+                            <span class="game-mode-display" id="gameModeDisplay">Human vs Human</span>
+                            <span class="difficulty-display" id="difficultyDisplay"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="header-center">
+                        <div class="current-player">
+                            <div class="player-indicator" id="playerIndicator">
+                                <span class="player-icon"></span>
+                                <span class="player-text">White to Move</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="header-right">
+                        <div class="game-timer" id="gameTimer">00:00</div>
+                        <button class="btn btn--outline" id="newGameBtn">New Game</button>
+                        <button class="btn btn--secondary" id="backToMenuBtn">Main Menu</button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Game Area -->
+            <div class="game-layout">
+                <!-- Left Panel -->
+                <div class="side-panel left-panel">
+                    <div class="card">
+                        <div class="card__header">
+                            <h3>Game Status</h3>
+                        </div>
+                        <div class="card__body">
+                            <div class="status-item">
+                                <span class="status-label">Turn:</span>
+                                <span class="status-value" id="turnNumber">1</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Status:</span>
+                                <span class="status status--success" id="gameStatus">Active</span>
+                            </div>
+                            <div class="status-item" id="aiStatus" style="display: none;">
+                                <span class="status-label">AI:</span>
+                                <span class="ai-thinking" id="aiThinking">
+                                    <span class="thinking-dots">
+                                        <span class="dot"></span>
+                                        <span class="dot"></span>
+                                        <span class="dot"></span>
+                                    </span>
+                                    Computing ELO Move...
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card__header">
+                            <h3>Captured Pieces</h3>
+                        </div>
+                        <div class="card__body">
+                            <div class="captured-section">
+                                <h4>White Captured</h4>
+                                <div class="captured-pieces" id="capturedWhite"></div>
+                            </div>
+                            <div class="captured-section">
+                                <h4>Black Captured</h4>
+                                <div class="captured-pieces" id="capturedBlack"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chess Board -->
+                <div class="board-container">
+                    <div class="board-wrapper">
+                        <div class="board-coordinates-vertical">
+                            <div class="coordinate">8</div>
+                            <div class="coordinate">7</div>
+                            <div class="coordinate">6</div>
+                            <div class="coordinate">5</div>
+                            <div class="coordinate">4</div>
+                            <div class="coordinate">3</div>
+                            <div class="coordinate">2</div>
+                            <div class="coordinate">1</div>
+                        </div>
+                        <div class="board-main">
+                            <div class="chess-board" id="chessBoard">
+                                <!-- Board will be generated by JavaScript -->
+                            </div>
+                            <div class="board-coordinates-horizontal">
+                                <div class="coordinate">a</div>
+                                <div class="coordinate">b</div>
+                                <div class="coordinate">c</div>
+                                <div class="coordinate">d</div>
+                                <div class="coordinate">e</div>
+                                <div class="coordinate">f</div>
+                                <div class="coordinate">g</div>
+                                <div class="coordinate">h</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="board-controls">
+                        <button class="btn btn--outline" id="undoBtn">Undo Move</button>
+                        <button class="btn btn--outline" id="exportPgnBtn">Export PGN</button>
+                    </div>
+                </div>
+
+                <!-- Right Panel -->
+                <div class="side-panel right-panel">
+                    <div class="card">
+                        <div class="card__header">
+                            <h3>Move History</h3>
+                        </div>
+                        <div class="card__body">
+                            <div class="move-history" id="moveHistory">
+                                <div class="no-moves">No moves yet</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" id="engineCard" style="display: none;">
+                        <div class="card__header">
+                            <h3>Stockfish 17.1 Analysis</h3>
+                        </div>
+                        <div class="card__body">
+                            <div class="engine-info">
+                                <div class="engine-item">
+                                    <span class="engine-label">ELO Rating:</span>
+                                    <span class="engine-value" id="currentElo">1500</span>
+                                </div>
+                                <div class="engine-item">
+                                    <span class="engine-label">Evaluation:</span>
+                                    <span class="engine-value" id="engineEval">0.0</span>
+                                </div>
+                                <div class="engine-item">
+                                    <span class="engine-label">Best Move:</span>
+                                    <span class="engine-value" id="bestMove">-</span>
+                                </div>
+                                <div class="engine-item">
+                                    <span class="engine-label">Depth:</span>
+                                    <span class="engine-value" id="engineDepth">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over Modal -->
+        <div class="modal" id="gameOverModal">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content">
+                <h2 id="gameOverTitle">Game Over</h2>
+                <p id="gameOverMessage">Game has ended</p>
+                <div class="modal-actions">
+                    <button class="btn btn--primary" id="viewAnalysisBtn">View Analysis</button>
+                    <button class="btn btn--secondary" id="playAgainBtn">Play Again</button>
+                    <button class="btn btn--outline" id="backToMenuFromGameOver">Main Menu</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Modal -->
+        <div class="modal analysis-modal" id="analysisModal">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Post-Game Analysis</h2>
+                    <button class="btn btn--outline" id="closeAnalysisBtn">Close</button>
+                </div>
+                
+                <div class="analysis-tabs">
+                    <button class="tab-btn active" data-tab="overview">Overview</button>
+                    <button class="tab-btn" data-tab="moves">Move Analysis</button>
+                    <button class="tab-btn" data-tab="accuracy">Accuracy</button>
+                </div>
+
+                <div class="analysis-content">
+                    <div class="tab-content active" id="overview">
+                        <div class="analysis-overview">
+                            <div class="game-summary">
+                                <h3>Game Summary</h3>
+                                <div class="summary-grid">
+                                    <div class="summary-item">
+                                        <span class="summary-label">Total Moves</span>
+                                        <span class="summary-value" id="totalMoves">0</span>
+                                    </div>
+                                    <div class="summary-item">
+                                        <span class="summary-label">Game Duration</span>
+                                        <span class="summary-value" id="gameDuration">00:00</span>
+                                    </div>
+                                    <div class="summary-item">
+                                        <span class="summary-label">Winner</span>
+                                        <span class="summary-value" id="gameWinner">-</span>
+                                    </div>
+                                    <div class="summary-item">
+                                        <span class="summary-label">AI ELO</span>
+                                        <span class="summary-value" id="aiEloResult">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="moves">
+                        <div class="move-analysis-container">
+                            <h3>Move-by-Move Analysis</h3>
+                            <div class="move-analysis-list" id="moveAnalysisList">
+                                <!-- Analysis will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="accuracy">
+                        <div class="accuracy-analysis">
+                            <h3>Player Accuracy</h3>
+                            <div class="accuracy-grid">
+                                <div class="accuracy-item">
+                                    <h4>White</h4>
+                                    <div class="accuracy-bar">
+                                        <div class="accuracy-fill" id="whiteAccuracyBar"></div>
+                                    </div>
+                                    <span class="accuracy-percentage" id="whiteAccuracy">0%</span>
+                                </div>
+                                <div class="accuracy-item">
+                                    <h4>Black</h4>
+                                    <div class="accuracy-bar">
+                                        <div class="accuracy-fill" id="blackAccuracyBar"></div>
+                                    </div>
+                                    <span class="accuracy-percentage" id="blackAccuracy">0%</span>
+                                </div>
+                            </div>
+                            <div class="move-classifications">
+                                <h4>Move Classifications</h4>
+                                <div class="classification-grid" id="classificationGrid">
+                                    <!-- Classifications will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Promotion Modal -->
+        <div class="modal" id="promotionModal">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content promotion-content">
+                <h2>Choose Promotion</h2>
+                <div class="promotion-options">
+                    <button class="promotion-btn" data-piece="queen">♕</button>
+                    <button class="promotion-btn" data-piece="rook">♖</button>
+                    <button class="promotion-btn" data-piece="bishop">♗</button>
+                    <button class="promotion-btn" data-piece="knight">♘</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
